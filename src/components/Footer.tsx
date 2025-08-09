@@ -8,7 +8,7 @@ export const Footer = () => {
   };
 
   const handleWhatsAppClick = () => {
-    window.open("https://wa.me/+201552002090", "_blank");
+    window.open("https://wa.me/+201559181558", "_blank");
   };
 
   return (

@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { importCSVCustomers } from "@/utils/csvImporter";
 import { Dashboard } from "@/components/Dashboard";
 import { CustomerTable } from "@/components/CustomerTable";
 import { CustomerForm } from "@/components/CustomerForm";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, Users, Plus } from "lucide-react";
+import { BarChart3, Users, Plus, Upload } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Customer {
   id: number;
@@ -24,6 +26,8 @@ export const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [showForm, setShowForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [importing, setImporting] = useState(false);
+  const { toast } = useToast();
 
   const handleAddCustomer = () => {
     setEditingCustomer(null);
@@ -44,6 +48,28 @@ export const AdminDashboard = () => {
   const handleCancelForm = () => {
     setShowForm(false);
     setEditingCustomer(null);
+  };
+
+  const handleImportCSV = async () => {
+    setImporting(true);
+    try {
+      const results = await importCSVCustomers();
+      const successCount = results.filter(r => r.success).length;
+      const errorCount = results.filter(r => !r.success).length;
+      
+      toast({
+        title: "تم استيراد البيانات",
+        description: `تم إضافة ${successCount} عميل بنجاح${errorCount > 0 ? ` مع ${errorCount} أخطاء` : ''}`,
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ في الاستيراد",
+        description: "فشل في استيراد بيانات العملاء",
+        variant: "destructive",
+      });
+    } finally {
+      setImporting(false);
+    }
   };
 
   return (
@@ -72,6 +98,17 @@ export const AdminDashboard = () => {
               onAddCustomer={handleAddCustomer}
               onEditCustomer={handleEditCustomer}
             />
+            <div className="mt-6 flex justify-center">
+              <Button
+                onClick={handleImportCSV}
+                disabled={importing}
+                variant="outline"
+                className="hover-scale"
+              >
+                <Upload className="h-4 w-4 ml-2" />
+                {importing ? "جاري الاستيراد..." : "استيراد عملاء من CSV"}
+              </Button>
+            </div>
           </TabsContent>
         </Tabs>
       ) : (
